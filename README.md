@@ -1,57 +1,86 @@
+# Mini Market Central
 
-# Mini-Market-Central
+Aplicacion web de mini market desarrollada con React + Vite.
+Incluye catalogo con integracion API (`axios`), respaldo local, carrito persistente y una interfaz moderna con Material UI.
 
-Aplicación web moderna (frontend) que simula una tienda multidepartamento sostenible, con catálogo de productos, carrito de compras, filtros, chat y reglas de negocio. Construida con React y Vite.
+## Stack
+- React 18
+- React Router DOM 6
+- Material UI 7 + Emotion
+- Axios
+- PayPal JS SDK (pago en linea)
+- Node + Express (API de pagos)
+- Vite 5
 
-## Características principales
-- Catálogo de productos con información detallada y stock
-- Carrito de compras funcional y persistente
-- Filtros por categoría y búsqueda
-- Chat de atención al cliente (ChatNuna)
-- Indicadores de inventario y badges
-- Diseño responsive y componentes reutilizables
+## Funcionalidades
+- Catalogo con filtros por categoria, busqueda y control de stock.
+- Consumo de API con capa de servicios (`src/services`).
+- Fallback local automatico si falla la API externa.
+- Carrito global con Context + Reducer y persistencia en `localStorage`.
+- Vista de detalle de producto y asistente de ayuda en linea.
+- Diseno responsive con animaciones suaves y carga diferida de rutas.
+- Flujo de pago en peruano con metodos: PayPal/tarjeta, Yape/Plin y contra entrega.
+- Integracion real con PayPal Orders API (creacion y captura de orden).
 
-## Instalación y uso
+## Estructura
+```text
+src/
+  app/              # Rutas y providers
+  components/       # UI comun, layout y features
+  config/           # Configuracion de entorno/app
+  context/          # Estado global (carrito)
+  data/             # Datos de respaldo local
+  hooks/            # Hooks de datos
+  pages/            # Vistas de negocio
+  services/         # Cliente HTTP y servicios API
+  theme/            # Tema global Material UI
+  utils/            # Formateadores y filtros
+server/
+  index.js          # Punto de entrada del backend
+  api/
+    routes/         # Rutas HTTP (pagos, health)
+    services/       # Integraciones externas (PayPal)
+    utils/          # Normalizacion y utilidades
+```
+
+## Ejecucion local
 ```bash
-# Clona el repositorio
-git clone https://github.com/EzerZuniga/Mini-Market-Central.git
-cd NUNA-Smart-Storefront
-
-# Instala dependencias
 npm install
-
-# Ejecuta en modo desarrollo
+npm run server
 npm run dev
 ```
 
-Abre http://localhost:5173 en tu navegador.
+`npm run server` levanta la API de pagos en `http://localhost:8787`.
+`npm run dev` levanta el frontend en `http://localhost:5173`.
 
-## Scripts disponibles
-- `npm run dev` — Inicia el servidor de desarrollo
-- `npm run build` — Genera la build de producción
-- `npm run preview` — Previsualiza la build
-
-## Estructura del proyecto
-
-```
-src/
-	App.jsx           # Componente principal
-	main.jsx          # Punto de entrada
-	styles.css        # Estilos globales
-	components/       # Componentes reutilizables
-	context/          # Contextos globales (ej. carrito)
-	data/             # Mock de datos
-	pages/            # Vistas principales
-	utils/            # Utilidades y helpers
+Ruta de pago:
+```text
+/pago
 ```
 
-## Dependencias principales
-- React 18
-- React Router DOM 6
-- Vite 5
+Build de produccion:
+```bash
+npm run build
+npm run preview
+```
 
-## Contribución
-¡Las contribuciones son bienvenidas! Por favor, abre un issue o pull request siguiendo las plantillas del repositorio.
+## Variables de entorno
+Copia `.env.example` a `.env` y configura:
 
-## Licencia
-MIT
+```bash
+# Frontend
+VITE_API_BASE_URL=https://dummyjson.com
+VITE_PAYMENTS_API_BASE_URL=
+
+# Backend
+PORT=8787
+PAYPAL_ENV=sandbox
+PAYPAL_CURRENCY=PEN
+PAYPAL_CLIENT_ID=tu_client_id
+PAYPAL_CLIENT_SECRET=tu_client_secret
+CORS_ORIGIN=http://localhost:5173
+```
+
+## Estado actual
+- Build validada correctamente con `npm run build`.
+- Pago en Peru listo con metodos locales + PayPal (requiere credenciales validas para PayPal).

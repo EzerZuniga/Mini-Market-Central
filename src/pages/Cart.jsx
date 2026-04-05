@@ -1,80 +1,160 @@
-import { useState } from 'react';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  IconButton,
+  Stack,
+  TextField,
+  Typography
+} from '@mui/material';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
 import Button from '../components/common/Button';
-import Card from '../components/common/Card';
 import { useCart } from '../context/CartContext';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatShortDate } from '../utils/formatters';
 
 export default function Cart() {
-  const { items, total, clearCart } = useCart();
-  const [showReceipt, setShowReceipt] = useState(false);
+  const {
+    items,
+    total,
+    updateItemQuantity,
+    decreaseItem,
+    removeItem,
+    clearCart
+  } = useCart();
 
-  const handleCheckout = () => {
-    setShowReceipt(true);
-    clearCart();
-  };
+  const hasItems = items.length > 0;
 
   return (
-    <div className="cart-page">
-      <header>
-        <h1>Tu carrito inteligente</h1>
-        <p>Resumen actualizado. Si necesitas factura electrónica, indícamelo para adjuntar en el recibo premium.</p>
-      </header>
+    <Stack spacing={1.4}>
+      <Card sx={{ borderRadius: 4 }}>
+        <CardContent>
+          <Typography variant="h4">Carrito de compras</Typography>
+          <Typography color="text.secondary">Revisa cantidades antes de confirmar tu pedido.</Typography>
+        </CardContent>
+      </Card>
 
-      {items.length === 0 && !showReceipt && (
-        <p>Aún no hay productos añadidos. Explora la colección y vuelve para cerrar tu compra.</p>
-      )}
-
-      {items.length > 0 && (
-        <div className="cart-table-wrapper">
-          <table className="cart-table">
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Categoria</th>
-                <th>Cantidad</th>
-                <th>Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td>{item.category}</td>
-                  <td>{item.quantity}</td>
-                  <td>{formatCurrency(item.price * item.quantity)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <div className="cart-summary">
-            <div>
-              <span>Total acumulado</span>
-              <strong>{formatCurrency(total)}</strong>
-            </div>
-            <p>Envío estimado: Lima 24-48h | Provincias 3-5 días (Olva/Shalom). Empaque compostable reutilizable.</p>
-            <Button onClick={handleCheckout}>Finalizar y generar recibo</Button>
-          </div>
-        </div>
-      )}
-
-      {showReceipt && (
-        <Card className="receipt-card">
-          <h2>Recibo de Compra Premium</h2>
-          <figure>
-            <img
-              src="https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1100&q=80"
-              alt="Recibo de compra premium impreso sobre texturas andinas modernas"
-            />
-            <figcaption>
-              Documento personalizado con desglose en soles y sello de comercio justo.
-            </figcaption>
-          </figure>
-          <p>
-            Gracias por impulsar la innovación sostenible. Si necesitas rectificar datos, contáctame por el chat y
-            actualizo la orden.
-          </p>
+      {!hasItems && (
+        <Card sx={{ borderRadius: 4, maxWidth: 620 }}>
+          <CardContent>
+            <Stack spacing={1.1}>
+              <Typography variant="h6">Tu carrito esta vacio.</Typography>
+              <Typography color="text.secondary">
+                Explora el catalogo y agrega productos para continuar.
+              </Typography>
+              <Button component={RouterLink} to="/catalogo" variant="secondary">
+                Ir al catalogo
+              </Button>
+            </Stack>
+          </CardContent>
         </Card>
       )}
-    </div>
+
+      {hasItems && (
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 1.3,
+            gridTemplateColumns: { xs: '1fr', lg: '1fr minmax(280px, 330px)' },
+            alignItems: 'start'
+          }}
+        >
+          <Stack spacing={1}>
+            {items.map((item) => (
+              <Card key={item.id} sx={{ borderRadius: 3 }}>
+                <CardContent>
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gap: 1,
+                      gridTemplateColumns: { xs: '1fr', sm: '1fr auto' },
+                      alignItems: 'center'
+                    }}
+                  >
+                    <Stack spacing={0.2}>
+                      <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+                        {item.name}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {item.category}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {`${formatCurrency(item.price)} c/u`}
+                      </Typography>
+                    </Stack>
+
+                    <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                      <Stack direction="row" spacing={0.4} alignItems="center">
+                        <IconButton onClick={() => decreaseItem(item.id)} aria-label="Disminuir cantidad">
+                          <RemoveRoundedIcon />
+                        </IconButton>
+                        <TextField
+                          type="number"
+                          value={item.quantity}
+                          onChange={(event) =>
+                            updateItemQuantity(item.id, Number(event.target.value))
+                          }
+                          inputProps={{ min: 1, max: item.stock }}
+                          size="small"
+                          sx={{ width: 88 }}
+                        />
+                        <IconButton
+                          onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
+                          aria-label="Aumentar cantidad"
+                        >
+                          <AddRoundedIcon />
+                        </IconButton>
+                      </Stack>
+
+                      <Stack alignItems="flex-end" spacing={0.2}>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+                          {formatCurrency(item.price * item.quantity)}
+                        </Typography>
+                        <IconButton
+                          color="error"
+                          onClick={() => removeItem(item.id)}
+                          aria-label="Quitar producto"
+                        >
+                          <DeleteOutlineRoundedIcon />
+                        </IconButton>
+                      </Stack>
+                    </Stack>
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Stack>
+
+          <Card sx={{ borderRadius: 4, position: { lg: 'sticky' }, top: { lg: 100 } }}>
+            <CardContent>
+              <Stack spacing={0.9}>
+                <Typography variant="h5">Resumen</Typography>
+                <Typography color="text.secondary">Total a pagar</Typography>
+                <Typography variant="h4" color="primary.main">
+                  {formatCurrency(total)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {`Actualizado: ${formatShortDate(new Date())}`}
+                </Typography>
+
+                <Divider sx={{ my: 0.6 }} />
+
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                  <Button onClick={clearCart} variant="secondary">
+                    Vaciar carrito
+                  </Button>
+                  <Button component={RouterLink} to="/pago">
+                    Confirmar pedido
+                  </Button>
+                </Stack>
+              </Stack>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
+    </Stack>
   );
 }

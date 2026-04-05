@@ -1,7 +1,10 @@
-export default function Card({ children, className = '' }) {
+import MuiCard from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+
+export default function Card({ children, className = '', sx = {} }) {
   return (
-    <div className={`card ${className}`}>
-      {children}
-    </div>
+    <MuiCard className={className} sx={sx}>
+      <CardContent>{children}</CardContent>
+    </MuiCard>
   );
 }

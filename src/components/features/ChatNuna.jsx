@@ -1,146 +1,146 @@
-import { useEffect, useMemo, useState } from 'react';
-import Modal from '../common/Modal';
-import Button from '../common/Button';
-import { products } from '../../data/mockData';
+import { useMemo, useState } from 'react';
+import {
+  Box,
+  Button,
+  Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Fab,
+  Stack,
+  TextField,
+  Typography
+} from '@mui/material';
+import ChatRoundedIcon from '@mui/icons-material/ChatRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import { useCart } from '../../context/CartContext';
 import { formatCurrency } from '../../utils/formatters';
 
-const openingMessage = {
-  text:
-    '¡Hola! Soy Nuna, tu asistente multidepartamento. Puedo contarte sobre Ropa sostenible, Gadgets conscientes y Accesorios con propósito. Recuerda: Lima 24-48h, Provincias 3-5 días vía Olva/Shalom.',
-  sender: 'bot'
-};
+function buildReply(message, total) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('envio') || normalized.includes('envío')) {
+    return 'Entregamos el mismo dia en zonas cercanas y al dia siguiente para cobertura distrital.';
+  }
+
+  if (normalized.includes('pago')) {
+    return 'Aceptamos tarjeta con PayPal, Yape, Plin y pago contra entrega en zonas habilitadas del Peru.';
+  }
+
+  if (normalized.includes('horario')) {
+    return 'Atendemos de lunes a sabado de 7:30 a.m. a 10:00 p.m. y domingos hasta las 8:00 p.m.';
+  }
+
+  if (normalized.includes('carrito') || normalized.includes('total')) {
+    return `El total actual de tu carrito es ${formatCurrency(total)}.`;
+  }
+
+  return 'Puedo ayudarte con horarios, metodos de pago, cobertura de entrega y estado de tu carrito.';
+}
 
 export default function ChatNuna() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([openingMessage]);
+  const { total } = useCart();
+  const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
-
-  useEffect(() => {
-    if (!isOpen) {
-      setMessages([openingMessage]);
+  const [messages, setMessages] = useState([
+    {
+      sender: 'bot',
+      text: 'Hola, soy CentralBot. Te ayudo con envios, pagos, horarios y tu pedido.'
     }
-  }, [isOpen]);
+  ]);
 
-  const catalogByKeyword = useMemo(
-    () => ({
-      ropa: products.filter((p) => p.category === 'Ropa'),
-      gadget: products.filter((p) => p.category === 'Gadgets'),
-      accesorios: products.filter((p) => p.category === 'Accesorios')
-    }),
+  const quickQuestions = useMemo(
+    () => ['Horarios de atencion', 'Metodos de pago', 'Cobertura de envio'],
     []
   );
 
-  const buildResponse = (text) => {
-    const lower = text.toLowerCase();
-    if (lower.includes('envio') || lower.includes('envío')) {
-      return 'Gestiono envíos express: Lima 24-48h y Provincias 3-5 días con Olva o Shalom. Empaques compostables y seguimiento en tiempo real.';
+  const sendMessage = (customText) => {
+    const outgoing = (customText || input).trim();
+    if (!outgoing) {
+      return;
     }
-    if (lower.includes('ropa')) {
-      const [item] = catalogByKeyword.ropa;
-      return `Nuestra Ropa sostenible incluye ${item.name} trabajado en ${item.materials?.join(', ')}. ${item.sustainability}. Precio ${formatCurrency(item.price)}.`;
-    }
-    if (lower.includes('gadget') || lower.includes('tecnolog')) {
-      const [item] = catalogByKeyword.gadget;
-      return `${item.name} ofrece ${item.specs?.join(', ')}. Durabilidad: ${item.durability}. Precio ${formatCurrency(item.price)}.`;
-    }
-    if (lower.includes('accesorio') || lower.includes('gourmet')) {
-      const [item] = catalogByKeyword.accesorios;
-      return `${item.name} destaca por ${item.sustainability}. Durabilidad: ${item.durability}. Precio ${formatCurrency(item.price)}.`;
-    }
-    if (lower.includes('recibo')) {
-      return 'Al finalizar tu compra genero un Recibo de Compra Premium con desglose en soles y sello de comercio justo.';
-    }
-    return 'Puedo ayudarte con detalles de Ropa, Gadgets, Accesorios o logística. Dime qué categoría quieres explorar y te guío.';
-  };
 
-  const sendMessage = () => {
-    const trimmed = input.trim();
-    if (!trimmed) return;
-    const reply = buildResponse(trimmed);
-    setMessages((prev) => [
-      ...prev,
-      { text: trimmed, sender: 'user' },
-      { text: reply, sender: 'bot' }
+    const reply = buildReply(outgoing, total);
+    setMessages((current) => [
+      ...current,
+      { sender: 'user', text: outgoing },
+      { sender: 'bot', text: reply }
     ]);
     setInput('');
   };
 
   return (
     <>
-      <Button onClick={() => setIsOpen(true)} className="chat-button" variant="primary">
-        <span className="chat-button-icon" aria-hidden="true">
-          <svg className="chat-handshake-icon" viewBox="0 0 24 24" role="presentation">
-            <defs>
-              <linearGradient id="chatHandshakeGradient" x1="3" y1="6" x2="21" y2="20" gradientUnits="userSpaceOnUse">
-                <stop offset="0" stopColor="#ffe29f" />
-                <stop offset="1" stopColor="#ffb065" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M4 9.5h3.1a1.8 1.8 0 0 1 1.27.53l3.72 3.72"
-              fill="none"
-              stroke="url(#chatHandshakeGradient)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M9.7 11.3 12.36 13.96a1.7 1.7 0 0 0 2.4 0l1.3-1.3a1.7 1.7 0 0 0 0-2.4l-3.1-3.1"
-              fill="none"
-              stroke="url(#chatHandshakeGradient)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14.3 7h2.8a2 2 0 0 1 1.4.59l2.2 2.2a2 2 0 0 1 0 2.82l-5.1 5.1a2.4 2.4 0 0 1-3.34 0l-4.73-4.73a1.8 1.8 0 0 0-1.27-.53H3.2"
-              fill="none"
-              stroke="url(#chatHandshakeGradient)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M8.2 15.3 9.7 13.8"
-              fill="none"
-              stroke="url(#chatHandshakeGradient)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M10.8 17.3 12.1 16"
-              fill="none"
-              stroke="url(#chatHandshakeGradient)"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </span>
-        <span className="chat-button-label">Conversa con Nuna</span>
-      </Button>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(false)} title="Nuna – Smart Storefront">
-        <div className="chat-container">
-          <div className="messages" role="log" aria-live="polite" aria-relevant="additions">
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`message ${msg.sender}`}>
-                {msg.text}
-              </div>
+      <Fab
+        color="primary"
+        onClick={() => setOpen(true)}
+        sx={{ position: 'fixed', right: 16, bottom: 16, zIndex: 1200 }}
+        aria-label="Abrir chat de ayuda"
+      >
+        <ChatRoundedIcon />
+      </Fab>
+
+      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Typography variant="h6">Asistente Mini Market Central</Typography>
+            <Button onClick={() => setOpen(false)} aria-label="Cerrar chat">
+              <CloseRoundedIcon />
+            </Button>
+          </Stack>
+        </DialogTitle>
+
+        <DialogContent sx={{ display: 'grid', gridTemplateRows: '1fr auto auto', gap: 1.4, minHeight: 430 }}>
+          <Stack spacing={1} sx={{ overflowY: 'auto', maxHeight: { xs: 260, md: 320 }, pr: 0.5 }}>
+            {messages.map((message, index) => (
+              <Box
+                key={`${message.sender}-${index}`}
+                sx={{
+                  alignSelf: message.sender === 'user' ? 'flex-end' : 'flex-start',
+                  bgcolor: message.sender === 'user' ? 'primary.main' : 'grey.100',
+                  color: message.sender === 'user' ? 'white' : 'text.primary',
+                  px: 1.4,
+                  py: 0.9,
+                  borderRadius: 2.5,
+                  maxWidth: '90%'
+                }}
+              >
+                <Typography variant="body2">{message.text}</Typography>
+              </Box>
             ))}
-          </div>
-          <div className="chat-input">
-            <input
-              type="text"
+          </Stack>
+
+          <Stack direction="row" spacing={0.8} useFlexGap flexWrap="wrap">
+            {quickQuestions.map((question) => (
+              <Chip
+                key={question}
+                label={question}
+                onClick={() => sendMessage(question)}
+                clickable
+                variant="outlined"
+              />
+            ))}
+          </Stack>
+
+          <Stack direction="row" spacing={1}>
+            <TextField
+              fullWidth
+              size="small"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Pregúntame por categorías, envíos o recibos"
+              placeholder="Escribe tu consulta"
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  sendMessage();
+                }
+              }}
             />
-            <Button onClick={sendMessage}>Enviar</Button>
-          </div>
-        </div>
-      </Modal>
+            <Button variant="contained" onClick={() => sendMessage()}>
+              Enviar
+            </Button>
+          </Stack>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

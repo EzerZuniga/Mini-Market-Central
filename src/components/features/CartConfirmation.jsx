@@ -1,50 +1,52 @@
-import { useEffect, useState } from 'react';
-import Card from '../common/Card';
+import { Button, Snackbar } from '@mui/material';
+import MuiAlert from '@mui/material/Alert';
+import { Link as RouterLink } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { formatCurrency } from '../../utils/formatters';
 
 export default function CartConfirmation() {
-  const { items, lastAddedAt, total } = useCart();
-  const [isVisible, setIsVisible] = useState(false);
+  const { items, lastAddedAt, lastAddedId, total } = useCart();
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (lastAddedAt) {
-      setIsVisible(true);
-      const timeout = setTimeout(() => setIsVisible(false), 4000);
-      return () => clearTimeout(timeout);
+    if (!lastAddedAt) {
+      return;
     }
+    setVisible(true);
   }, [lastAddedAt]);
 
-  if (!isVisible || items.length === 0) {
+  const recentlyAdded = useMemo(() => {
+    if (!items.length) {
+      return null;
+    }
+    return items.find((item) => item.id === lastAddedId) || items[items.length - 1];
+  }, [items, lastAddedId]);
+
+  if (!recentlyAdded) {
     return null;
   }
 
   return (
-    <div className="cart-confirmation" role="status" aria-live="polite">
-      <Card className="cart-confirmation-card">
-        <h4>Carrito actualizado ✔️</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Cant</th>
-              <th>Producto</th>
-              <th>Subtotal</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.quantity}</td>
-                <td>{item.name}</td>
-                <td>{formatCurrency(item.price * item.quantity)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="cart-confirmation-total">
-          Total acumulado: <strong>{formatCurrency(total)}</strong>
-        </div>
-      </Card>
-    </div>
+    <Snackbar
+      open={visible}
+      autoHideDuration={3500}
+      onClose={() => setVisible(false)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      <MuiAlert
+        onClose={() => setVisible(false)}
+        severity="success"
+        variant="filled"
+        sx={{ width: '100%', alignItems: 'center' }}
+        action={
+          <Button component={RouterLink} to="/carrito" color="inherit" size="small">
+            Ver carrito
+          </Button>
+        }
+      >
+        {`${recentlyAdded.name} agregado. Total: ${formatCurrency(total)}`}
+      </MuiAlert>
+    </Snackbar>
   );
 }

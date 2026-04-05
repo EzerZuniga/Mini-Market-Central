@@ -1,15 +1,33 @@
+import MuiButton from '@mui/material/Button';
+
+const variantConfig = {
+  primary: { variant: 'contained', color: 'primary' },
+  secondary: { variant: 'contained', color: 'secondary' },
+  ghost: { variant: 'outlined', color: 'inherit' }
+};
+
 export default function Button({
   children,
   onClick,
   variant = 'primary',
   className = '',
   type = 'button',
-  disabled = false
+  disabled = false,
+  ...rest
 }) {
-  const classes = ['btn', `btn-${variant}`, className].filter(Boolean).join(' ');
+  const config = variantConfig[variant] || variantConfig.primary;
+
   return (
-    <button type={type} onClick={onClick} className={classes} disabled={disabled}>
+    <MuiButton
+      type={type}
+      onClick={onClick}
+      variant={config.variant}
+      color={config.color}
+      disabled={disabled}
+      className={className}
+      {...rest}
+    >
       {children}
-    </button>
+    </MuiButton>
   );
 }

@@ -1,24 +1,56 @@
+function normalizeText(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase();
+}
+
 export function filterByCategory(products, category) {
-  if (category === 'all') {
+  const normalizedCategory = normalizeText(category);
+
+  if (!normalizedCategory || normalizedCategory === 'all') {
     return products;
   }
-  return products.filter(product => product.category === category);
-}
 
-export function filterByPrice(products, minPrice, maxPrice) {
-  return products.filter(product => 
-    product.price >= minPrice && product.price <= maxPrice
+  return products.filter(
+    (product) => normalizeText(product.category) === normalizedCategory
   );
-}
-
-export function filterInStock(products) {
-  return products.filter(product => product.inStock);
 }
 
 export function searchProducts(products, query) {
-  const lowerQuery = query.toLowerCase();
-  return products.filter(product =>
-    product.name.toLowerCase().includes(lowerQuery) ||
-    product.description.toLowerCase().includes(lowerQuery)
+  const normalizedQuery = normalizeText(query);
+  if (!normalizedQuery) {
+    return products;
+  }
+
+  return products.filter((product) => {
+    const haystack = `${product.name} ${product.description} ${product.brand} ${product.category}`;
+    return normalizeText(haystack).includes(normalizedQuery);
+  });
+}
+
+export function filterInStock(products) {
+  return products.filter((product) => (product.stock || 0) > 0);
+}
+
+export function filterByPrice(products, minPrice, maxPrice) {
+  const lowerLimit = Number.isFinite(minPrice) ? minPrice : 0;
+  const upperLimit = Number.isFinite(maxPrice) ? maxPrice : Number.POSITIVE_INFINITY;
+
+  return products.filter(
+    (product) => product.price >= lowerLimit && product.price <= upperLimit
   );
+}
+
+export function applyProductFilters(
+  products,
+  { category = 'all', query = '', onlyInStock = false }
+) {
+  let filtered = filterByCategory(products, category);
+  filtered = searchProducts(filtered, query);
+
+  if (onlyInStock) {
+    filtered = filterInStock(filtered);
+  }
+
+  return filtered;
 }

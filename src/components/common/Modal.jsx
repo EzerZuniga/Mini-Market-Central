@@ -1,40 +1,25 @@
-import { useEffect, useId } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Stack,
+  Typography
+} from '@mui/material';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 
 export default function Modal({ isOpen, onClose, children, title }) {
-  const titleId = useId();
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        onClose?.();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-overlay" onClick={onClose} role="presentation">
-      <div
-        className="modal-content"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-header">
-          <h2 id={titleId}>{title}</h2>
-          <button type="button" onClick={onClose} className="modal-close" aria-label="Cerrar">
-            ×
-          </button>
-        </div>
-        <div className="modal-body">
-          {children}
-        </div>
-      </div>
-    </div>
+    <Dialog open={isOpen} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Typography variant="h6">{title}</Typography>
+          <IconButton onClick={onClose} aria-label="Cerrar dialogo">
+            <CloseRoundedIcon />
+          </IconButton>
+        </Stack>
+      </DialogTitle>
+      <DialogContent dividers>{children}</DialogContent>
+    </Dialog>
   );
 }

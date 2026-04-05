@@ -1,69 +1,76 @@
-import { Link } from 'react-router-dom';
-import Card from '../common/Card';
+import { Link as RouterLink } from 'react-router-dom';
+import {
+  Box,
+  Card,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Stack,
+  Typography
+} from '@mui/material';
 import Button from '../common/Button';
 import Badge from '../common/Badge';
+import InventoryStatus from './InventoryStatus';
 import { useCart } from '../../context/CartContext';
 import { formatCurrency } from '../../utils/formatters';
 
-const sustainabilityCopy = {
-  Ropa: 'Materia prima de origen ético, trazabilidad total y tintes botánicos sin tóxicos.',
-  Gadgets: 'Hardware diseñado para durar, con componentes reparables y eficiencia energética.',
-  Accesorios: 'Diseño consciente con materiales compostables y empaques biodegradables.'
-};
+const imageFallback =
+  'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1000&q=80';
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
-  const badgeVariant = product.inStock ? 'success' : 'danger';
-  const badgeLabel = product.inStock ? 'Disponible' : 'Agotado';
-  const categoryNote = sustainabilityCopy[product.category];
 
   return (
-    <Card className="product-card">
-      <figure className="product-figure">
-        <img
-          src={product.image}
-          alt={`${product.name} - Fotografía de producto de alta gama con detalles andinos`}
-          className="product-image"
-        />
-        <figcaption>Estilo editorial, iluminación natural, texturas orgánicas.</figcaption>
-      </figure>
-      <div className="product-info">
-        <h3>{product.name}</h3>
-        <p className="product-price">{formatCurrency(product.price)}</p>
-        <Badge variant={badgeVariant}>{badgeLabel}</Badge>
-        {product.category === 'Ropa' && (
-          <ul className="product-meta">
-            <li>Materiales: {product.materials?.join(', ')}</li>
-            <li>Sostenibilidad: {product.sustainability}</li>
-            <li>Ética: {product.ethics}</li>
-          </ul>
-        )}
-        {product.category === 'Gadgets' && (
-          <ul className="product-meta">
-            {product.specs?.map((spec) => (
-              <li key={spec}>{spec}</li>
-            ))}
-            <li>Durabilidad: {product.durability}</li>
-          </ul>
-        )}
-        {product.category === 'Accesorios' && (
-          <ul className="product-meta">
-            <li>Sostenibilidad: {product.sustainability}</li>
-            <li>Durabilidad: {product.durability}</li>
-          </ul>
-        )}
-        <p className="product-impact">
-          {categoryNote} Cada compra impulsa programas de innovación textil y tecnológica.
-        </p>
-        <div className="product-actions">
-          <Link to={`/product/${product.id}`}>
-            <Button variant="secondary">Ver detalles</Button>
-          </Link>
-          <Button onClick={() => addItem(product)} disabled={!product.inStock}>
-            Añadir al carrito
-          </Button>
-        </div>
-      </div>
+    <Card
+      className="hover-lift"
+      sx={{
+        height: '100%',
+        display: 'grid',
+        gridTemplateRows: '220px 1fr auto',
+        borderRadius: 4,
+        overflow: 'hidden'
+      }}
+    >
+      <CardMedia
+        component="img"
+        image={product.image || imageFallback}
+        alt={`Producto ${product.name}`}
+        sx={{ objectFit: 'cover' }}
+      />
+
+      <CardContent sx={{ display: 'grid', gap: 1 }}>
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+          <Badge variant={product.inStock ? 'success' : 'danger'}>{product.category}</Badge>
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {product.brand}
+          </Typography>
+        </Stack>
+
+        <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+          {product.name}
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary" sx={{ minHeight: 48 }}>
+          {product.description}
+        </Typography>
+
+        <Typography variant="h6" color="primary.main">
+          {formatCurrency(product.price)}
+        </Typography>
+
+        <Box>
+          <InventoryStatus stock={product.stock} />
+        </Box>
+      </CardContent>
+
+      <CardActions sx={{ p: 2, pt: 0, gap: 1, flexWrap: 'wrap' }}>
+        <Button component={RouterLink} to={`/producto/${product.id}`} variant="ghost">
+          Ver detalle
+        </Button>
+        <Button onClick={() => addItem(product)} disabled={!product.inStock}>
+          Agregar
+        </Button>
+      </CardActions>
     </Card>
   );
 }

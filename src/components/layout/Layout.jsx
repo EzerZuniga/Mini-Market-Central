@@ -1,16 +1,22 @@
-import Header from './Header';
-import Footer from './Footer';
+import { Box, Container } from '@mui/material';
 import CartConfirmation from '../features/CartConfirmation';
+import Footer from './Footer';
+import Header from './Header';
 
 export default function Layout({ children }) {
   return (
-    <div className="layout">
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Header />
-      <main className="main-content">
+      <Container
+        component="main"
+        maxWidth="lg"
+        sx={{ flex: 1, py: { xs: 2.5, md: 3.5 } }}
+        className="page-fade"
+      >
         {children}
-      </main>
+      </Container>
       <CartConfirmation />
       <Footer />
-    </div>
+    </Box>
   );
 }
